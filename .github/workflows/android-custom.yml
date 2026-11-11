@@ -1,0 +1,48 @@
+name: Android custom build
+
+on:
+  push:
+    branches: [ main, master, custom ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      SDL_VERSION: 2.32.10
+      FFMPEG_VERSION: '9.0'
+      GH_CPU_ARCH: arm64
+      GH_CPU_OS: android
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: bash scripts/gha/deps_android.sh
+
+      - name: Build engine
+        run: bash scripts/gha/build_android.sh
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: xash3d-fwgs-android-custom
+          path: artifacts/xash3d-fwgs-android.apk
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view continuous >/dev/null 2>&1; then
+            gh release upload continuous artifacts/xash3d-fwgs-android.apk --clobber
+          else
+            gh release create continuous artifacts/xash3d-fwgs-android.apk \
+              --prerelease \
+              --title "Custom Android engine build" \
+              --notes "Xash3D FWGS engine with the Android 17 GLES1 startup crash fix, MSAA (-msaa) and render resolution (r_scene_scale) launcher settings. arm64-v8a only."
+          fi

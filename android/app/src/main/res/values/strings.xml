@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name" translatable="false">Xash3D FWGS</string>
+	<string name="library">Library</string>
+	<string name="dedicated_server">Dedicated</string>
+	<string name="app_settings">Settings</string>
+	<string name="game_settings">Game Settings</string>
+	<string name="game_settings_command_line">Command-line arguments</string>
+	<string name="game_settings_volume_buttons">Use volume buttons in-game</string>
+	<string name="game_settings_yapb_bots">Enable YaPB bots (CS only)</string>
+	<string name="preferences_package_name">Libraries package</string>
+	<string name="preferences_separate_libraries">Libraries from separate packages</string>
+	<string name="preferences_client_package">Client package</string>
+	<string name="preferences_server_package">Server package</string>
+	<string name="preferences_use_icons">Use icons instead of backgrounds</string>
+	<string name="game_data_location">Game data location</string>
+	<string name="game_data_location_not_local_storage">This folder is not located on the device\'s storage. Cloud services and virtual folders cannot be used as a game data location. Choose a folder on the internal storage or a mounted SD card.</string>
+	<string name="game_data_location_invalid_path">Could not resolve the selected folder to a real directory path. Try selecting it again.</string>
+	<string name="game_data_location_volume_root">The root of a storage cannot be used as the game data location. Create a folder inside it (for example, xash) and select that folder instead.</string>
+	<string name="game_data_location_volume_unavailable">The selected storage volume is unavailable. Make sure the SD card or USB drive is inserted and mounted.</string>
+	<string name="game_data_location_not_a_directory">The selected item is not a readable folder. Try selecting it again.</string>
+	<string name="game_data_location_read_only">The selected folder is not writable. The engine needs to write saves and configuration files into the game data location, so read-only storages cannot be used.</string>
+	<string name="game_data_location_media_directory">Standard media folders such as DCIM, Pictures, Movies or Music and the folders inside them cannot be used: a .nomedia marker file is created in the game data location, which would hide the contents of the folder from gallery and media player apps. Choose or create a separate folder for the games, for example in the root of the storage, and select it instead.</string>
+	<string name="game_data_location_removable_restricted">On Android 4.4-10, writing to arbitrary folders on removable storage is restricted. Use internal storage or select a folder inside %1$s, if available.</string>
+	<string name="game_data_location_unreadable">The contents of this folder cannot be read.</string>
+	<string name="game_data_location_picker_unavailable">This device has no system folder picker.</string>
+	<string name="game_data_location_select_parent">Select the folder that contains game folders (for example, valve or cstrike), not one of the game folders itself.</string>
+	<string name="game_data_location_empty_title">No games found</string>
+	<string name="game_data_location_empty_message">The selected folder does not contain any game directories (folders with a liblist.gam or gameinfo.txt file). Use it as the game data location anyway?</string>
+	<string name="game_data_location_use_anyway">Use anyway</string>
+	<string name="file_access_required">All-files access required</string>
+	<string name="file_access_message">All-files access is required for the app to function properly.</string>
+	<string name="select_current_directory">Select current directory</string>
+	<string name="external_storage_required">External storage access required</string>
+	<string name="external_storage_message">External storage access is required for the app to function properly.</string>
+	<string name="open_settings">Open settings</string>
+	<string name="done_check_permissions">Done! Check permissions</string>
+	<string name="game_apk_required">Game code APK required</string>
+	<string name="game_apk_message">To launch this game, you need additional APK installed</string>
+	<string name="game_apk_install">Download</string>
+	<string name="crash_dialog_title">Xash3D FWGS crashed last time</string>
+	<string name="crash_send_to_developers">Send to developers</string>
+	<string name="crash_share">Share</string>
+	<string name="crash_dismiss">Dismiss</string>
+	<string name="crash_logs">Crash logs</string>
+	<string name="crash_logs_empty">No crash logs recorded</string>
+	<string name="crash_log_delete">Delete</string>
+	<string name="crash_email_subject" translatable="false">Xash3D FWGS crash report</string>
+	<string name="crash_email_body">Crash details are attached. Please describe in as much detail as possible what you were doing when the game crashed — every little thing helps us fix it!</string>
+	<string name="crash_no_mail_app_title">No mail app found</string>
+	<string name="crash_no_mail_app_message">No email client is installed on this device. Install one (or use Share to send the report another way) and try again.</string>
+	<string name="downloading_game_libs">Downloading Game Libraries</string>
+	<string name="downloading">Downloading…</string>
+	<string name="download_progress">Downloading… %1$s / %2$s</string>
+	<string name="download_progress_unknown">Downloading… %1$s</string>
+	<string name="download_failed">Download Failed</string>
+	<string name="download_error">An error occurred while downloading game libraries.</string>
+	<string name="update_available">Update Available</string>
+	<string name="update_available_message">A newer version of the game libraries is available. Download the update?</string>
+	<string name="update_download">Update</string>
+	<string name="update_skip">Skip</string>
+	<string name="manifest_error_title">Cannot reach game library server</string>
+	<string name="manifest_error_message">Failed to download the build manifest:\n\n%1$s\n\nGame libraries cannot be downloaded right now. You can launch the engine anyway, but it likely won\'t find the game DLLs.</string>
+	<string name="launch_anyway">Launch anyway</string>
+	<string name="source_repo">Source repository</string>
+	<string name="source_branch">Branch</string>
+	<string name="source_commit">Commit</string>
+	<string name="downloaded_at">Downloaded</string>
+	<string name="engine_update_available">Engine Update Available</string>
+	<string name="engine_update_message">Build %1$d is available. Update now?</string>
+	<string name="engine_update_changelog_header">Changes since your build:</string>
+	<string name="engine_update_changelog_more">+ %1$d more commits</string>
+	<string name="engine_update_download">Update</string>
+	<string name="engine_update_later">Later</string>
+	<string name="engine_update_downloading">Downloading Update</string>
+	<string name="engine_update_permission_needed">Permission Required</string>
+	<string name="engine_update_permission_message">To install the update, allow Xash3D FWGS to install unknown apps in system settings.</string>
+	<string name="engine_update_open_settings">Open settings</string>
+	<string name="check_updates">Check for updates</string>
+	<string name="engine_update_checking">Checking for updates…</string>
+	<string name="engine_update_up_to_date">You\'re already on the latest build.</string>
+	<string name="engine_update_check_failed">Couldn\'t check for updates. Check your connection and try again.</string>
+	<string name="engine_install_failed">Update install failed: %1$s</string>
+
+	<string name="game_settings_resolution">Render resolution</string>
+	<string name="game_settings_resolution_native">Native</string>
+	<string name="game_settings_resolution_1080p">1080p</string>
+	<string name="game_settings_resolution_720p">720p (recommended)</string>
+	<string name="game_settings_resolution_540p">540p</string>
+	<string name="game_settings_resolution_480p">480p</string>
+	<string name="game_settings_resolution_360p">360p</string>
+	<string name="game_settings_msaa">Anti-aliasing (MSAA)</string>
+	<string name="game_settings_msaa_off">Off</string>
+	<string name="game_settings_msaa_2x">2x MSAA</string>
+	<string name="game_settings_msaa_4x">4x MSAA</string>
+	<string name="game_settings_msaa_8x">8x MSAA</string>
+	<string name="game_settings_msaa_16x">16x MSAA</string>
+	<string name="game_settings_renderer">Renderer</string>
+	<string name="game_settings_renderer_auto">Automatic</string>
+	<string name="game_settings_renderer_gl4es">GL4ES (recommended)</string>
+	<string name="game_settings_renderer_gles3">GLES3 (gl2_shim)</string>
+	<string name="game_settings_renderer_gles1">GLES1 (NanoGL, legacy)</string>
+	<string name="game_settings_renderer_soft">Software</string>
+
+	<string-array name="game_settings_resolution_entries">
+		<item>@string/game_settings_resolution_native</item>
+		<item>@string/game_settings_resolution_1080p</item>
+		<item>@string/game_settings_resolution_720p</item>
+		<item>@string/game_settings_resolution_540p</item>
+		<item>@string/game_settings_resolution_480p</item>
+		<item>@string/game_settings_resolution_360p</item>
+	</string-array>
+
+	<string-array name="game_settings_resolution_values">
+		<item>0</item>
+		<item>1080</item>
+		<item>720</item>
+		<item>540</item>
+		<item>480</item>
+		<item>360</item>
+	</string-array>
+
+	<string-array name="game_settings_msaa_entries">
+		<item>@string/game_settings_msaa_off</item>
+		<item>@string/game_settings_msaa_2x</item>
+		<item>@string/game_settings_msaa_4x</item>
+		<item>@string/game_settings_msaa_8x</item>
+		<item>@string/game_settings_msaa_16x</item>
+	</string-array>
+
+	<string-array name="game_settings_msaa_values">
+		<item>0</item>
+		<item>2</item>
+		<item>4</item>
+		<item>8</item>
+		<item>16</item>
+	</string-array>
+
+	<string-array name="game_settings_renderer_entries">
+		<item>@string/game_settings_renderer_auto</item>
+		<item>@string/game_settings_renderer_gl4es</item>
+		<item>@string/game_settings_renderer_gles3</item>
+		<item>@string/game_settings_renderer_gles1</item>
+		<item>@string/game_settings_renderer_soft</item>
+	</string-array>
+
+	<string-array name="game_settings_renderer_values">
+		<item>auto</item>
+		<item>gl4es</item>
+		<item>gles3compat</item>
+		<item>gles1</item>
+		<item>soft</item>
+	</string-array>
+</resources>
