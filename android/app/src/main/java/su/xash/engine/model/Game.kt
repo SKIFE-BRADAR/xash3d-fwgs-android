@@ -275,7 +275,7 @@ class Game(val ctx: Context, val basedir: File, val gameInfoFile: File, previous
 			return "https://github.com/Velaron/tf15-client/releases/download/continuous/TF15Client-Android.apk"
 
 		// just so we don't return null
-		return "https://github.com/FWGS/xash3d-fwgs/releases/download/continuous/xash3d-fwgs-android.apk"
+		return "https://github.com/SKIFE-BRADAR/xash3d-fwgs-android/releases/download/continuous/xash3d-fwgs-android.apk"
 	}
 
 	private fun getGameLibDir(ctx: Context, packageName: String): String? {
