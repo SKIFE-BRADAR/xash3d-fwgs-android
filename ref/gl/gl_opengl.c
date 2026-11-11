@@ -41,6 +41,8 @@ CVAR_DEFINE_AUTO( r_ripple_updatetime, "0.05", FCVAR_GLCONFIG, "how fast ripple 
 CVAR_DEFINE_AUTO( r_ripple_spawntime, "0.1", FCVAR_GLCONFIG, "how fast new ripples spawn" );
 CVAR_DEFINE_AUTO( r_large_lightmaps, "0", FCVAR_GLCONFIG|FCVAR_LATCH, "enable larger lightmap atlas textures (might break custom renderer mods)" );
 CVAR_DEFINE_AUTO( r_scene_scale, "1.0", FCVAR_GLCONFIG, "render the 3D scene at this fraction of the window resolution (0.1 to 8.0), HUD is unaffected" );
+CVAR_DEFINE_AUTO( r_scene_width, "0", FCVAR_GLCONFIG, "render the 3D scene at this exact width, overrides r_scene_scale when both width and height are set" );
+CVAR_DEFINE_AUTO( r_scene_height, "0", FCVAR_GLCONFIG, "render the 3D scene at this exact height, overrides r_scene_scale when both width and height are set" );
 
 
 gl_globals_t	tr;
@@ -1270,6 +1272,8 @@ static void GL_InitCommands( void )
 	gEngfuncs.Cvar_RegisterVariable( &r_vbo_detail );
 	gEngfuncs.Cvar_RegisterVariable( &r_large_lightmaps );
 	gEngfuncs.Cvar_RegisterVariable( &r_scene_scale );
+	gEngfuncs.Cvar_RegisterVariable( &r_scene_width );
+	gEngfuncs.Cvar_RegisterVariable( &r_scene_height );
 
 	gEngfuncs.Cvar_RegisterVariable( &gl_extensions );
 	gEngfuncs.Cvar_RegisterVariable( &gl_texture_nearest );
@@ -1461,8 +1465,19 @@ GL_CheckForErrors
 obsolete
 =================
 */
+typedef struct
+{
+	GLenum error;
+	const char *file;
+	int line;
+} gl_seen_error_t;
+
 void GL_CheckForErrors_( const char *filename, const int fileline )
 {
+	static gl_seen_error_t seen[16];
+	static int num_seen;
+	static qboolean overflow_reported;
+
 	if( !gl_check_errors.value || !gpGlobals->developer )
 		return;
 
@@ -1471,7 +1486,33 @@ void GL_CheckForErrors_( const char *filename, const int fileline )
 	if( err == GL_NO_ERROR )
 		return;
 
-	gEngfuncs.Con_Printf( S_OPENGL_ERROR "%s (at %s:%i)\n", GL_ErrorString( err ), filename, fileline );
+	// Some wrappers keep generating the same harmless error every frame.
+	// Report each unique error and call site once instead of flooding the
+	// console, but keep the first occurrence so the cause stays visible.
+	for( int i = 0; i < num_seen; i++ )
+	{
+		if( seen[i].error == err && seen[i].line == fileline && !Q_strcmp( seen[i].file, filename ))
+			return;
+	}
+
+	if( num_seen >= ARRAYSIZE( seen ))
+	{
+		if( !overflow_reported )
+		{
+			overflow_reported = true;
+			gEngfuncs.Con_Printf( S_OPENGL_ERROR "%s (at %s:%i) — too many unique GL errors, further messages suppressed\n",
+				GL_ErrorString( err ), filename, fileline );
+		}
+		return;
+	}
+
+	seen[num_seen].error = err;
+	seen[num_seen].file = filename;
+	seen[num_seen].line = fileline;
+	num_seen++;
+
+	gEngfuncs.Con_Printf( S_OPENGL_ERROR "%s (at %s:%i) — further identical errors suppressed\n",
+		GL_ErrorString( err ), filename, fileline );
 }
 
 void GL_SetupAttributes( int safegl )

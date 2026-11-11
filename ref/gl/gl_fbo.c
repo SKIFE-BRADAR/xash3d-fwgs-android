@@ -133,16 +133,24 @@ void GL_FreeRenderTargets( void )
 
 static int GL_SceneTargetSamples( void )
 {
+	static GLint max_samples_cached = -1;
+
 	if( glConfig.max_multisamples <= 1 || !gl_msaa.value )
 		return 0;
 
 	if( !GL_Support( GL_FRAMEBUFFER_MULTISAMPLE_EXT ) || !GL_Support( GL_FRAMEBUFFER_BLIT_EXT ))
 		return 0;
 
-	GLint max_samples = 0;
-	pglGetIntegerv( GL_MAX_SAMPLES, &max_samples );
+	// querying GL_MAX_SAMPLES every frame can spam GL errors on some
+	// wrappers, so cache the result for the lifetime of the renderer
+	if( max_samples_cached < 0 )
+	{
+		GLint max_samples = 0;
+		pglGetIntegerv( GL_MAX_SAMPLES, &max_samples );
+		max_samples_cached = Q_max( 0, max_samples );
+	}
 
-	return Q_min( glConfig.max_multisamples, max_samples );
+	return Q_min( glConfig.max_multisamples, max_samples_cached );
 }
 
 static void GL_GetWindowSize( int *width, int *height )
@@ -196,19 +204,38 @@ to match r_scene_scale and MSAA settings, binds the screen target
 */
 void GL_CheckRenderTargets( void )
 {
-	int width, height;
+	int width, height, scene_width, scene_height;
 	float scale = bound( 0.1f, r_scene_scale.value, 8.0f );
-	qboolean wanted = scale != 1.0f;
+	int custom_width = Q_rint( r_scene_width.value );
+	int custom_height = Q_rint( r_scene_height.value );
+	qboolean custom = custom_width > 0 && custom_height > 0;
 
 	GL_GetWindowSize( &width, &height );
 
-	if( FBitSet( r_scene_scale.flags, FCVAR_CHANGED ))
+	if( custom )
+	{
+		scene_width = Q_max( 1, custom_width );
+		scene_height = Q_max( 1, custom_height );
+	}
+	else
+	{
+		scene_width = Q_max( 1, Q_rint( width * scale ));
+		scene_height = Q_max( 1, Q_rint( height * scale ));
+	}
+
+	qboolean wanted = scene_width != width || scene_height != height;
+
+	if( FBitSet( r_scene_scale.flags, FCVAR_CHANGED )
+		|| FBitSet( r_scene_width.flags, FCVAR_CHANGED )
+		|| FBitSet( r_scene_height.flags, FCVAR_CHANGED ))
 	{
 		ClearBits( r_scene_scale.flags, FCVAR_CHANGED );
+		ClearBits( r_scene_width.flags, FCVAR_CHANGED );
+		ClearBits( r_scene_height.flags, FCVAR_CHANGED );
 		tr.targets.failed = false;
 
 		if( wanted && !GL_Support( GL_FRAMEBUFFER_OBJECT_EXT ))
-			gEngfuncs.Con_Printf( S_WARN "r_scene_scale requires framebuffer objects, which are not supported\n" );
+			gEngfuncs.Con_Printf( S_WARN "custom scene resolution requires framebuffer objects, which are not supported\n" );
 	}
 
 	if( !wanted || !GL_Support( GL_FRAMEBUFFER_OBJECT_EXT ))
@@ -217,8 +244,6 @@ void GL_CheckRenderTargets( void )
 		return;
 	}
 
-	int scene_width = Q_max( 1, Q_rint( width * scale ));
-	int scene_height = Q_max( 1, Q_rint( height * scale ));
 	int samples = GL_SceneTargetSamples();
 
 	if( GL_RenderTargetsActive( ) && tr.targets.scene.width == scene_width && tr.targets.scene.height == scene_height

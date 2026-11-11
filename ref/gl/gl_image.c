@@ -949,12 +949,31 @@ show GL-errors on load images
 */
 static void GL_CheckTexImageError( gl_texture_t *tex )
 {
+	static double last_report;
+	static int suppressed;
 	Assert( tex != NULL );
 
 	// catch possible errors
 	int err;
 	if( gl_check_errors.value && ( err = pglGetError()) != GL_NO_ERROR )
+	{
+		double now = gp_host->realtime;
+
+		if( now - last_report < 5.0 )
+		{
+			suppressed++;
+			return;
+		}
+
+		if( suppressed )
+		{
+			gEngfuncs.Con_Printf( S_OPENGL_ERROR "%i more texture upload errors were suppressed\n", suppressed );
+			suppressed = 0;
+		}
+
 		gEngfuncs.Con_Printf( S_OPENGL_ERROR "%s while uploading %s [%s]\n", GL_ErrorString( err ), tex->name, GL_TargetToString( tex->target ));
+		last_report = now;
+	}
 }
 
 /*

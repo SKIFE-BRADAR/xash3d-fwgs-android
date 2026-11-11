@@ -111,15 +111,31 @@ class Game(val ctx: Context, val basedir: File, val gameInfoFile: File, previous
 		if (!renderer.isNullOrEmpty() && renderer != "auto")
 			videoArgs.append("-ref ").append(renderer).append(' ')
 
+		val customResolution = parseCustomResolution(pref.getString("custom_resolution", ""))
 		val targetHeight = pref.getString("resolution_height", "0")?.toIntOrNull() ?: 0
-		if (targetHeight > 0) {
+
+		if (customResolution != null) {
+			// Exact scene size, e.g. 860x605. r_scene_width/r_scene_height
+			// override r_scene_scale in the renderer. Always reset the scale so
+			// a stale value from opengl.cfg can never take over.
+			videoArgs.append("+r_scene_width ").append(customResolution.first).append(' ')
+			videoArgs.append("+r_scene_height ").append(customResolution.second).append(' ')
+			videoArgs.append("+r_scene_scale 1.0 ")
+		} else {
+			// Always clear exact-size overrides that may have been saved into
+			// opengl.cfg by an older launch.
+			videoArgs.append("+r_scene_width 0 +r_scene_height 0 ")
+
 			val metrics = ctx.resources.displayMetrics
 			val screenHeight = minOf(metrics.widthPixels, metrics.heightPixels)
-			if (screenHeight > targetHeight) {
-				videoArgs.append("+r_scene_scale ")
-					.append(String.format(Locale.US, "%.4f", targetHeight.toFloat() / screenHeight))
-					.append(' ')
-			}
+			val scale = if (targetHeight > 0 && screenHeight > targetHeight)
+				targetHeight.toFloat() / screenHeight
+			else
+				1.0f
+
+			videoArgs.append("+r_scene_scale ")
+				.append(String.format(Locale.US, "%.4f", scale))
+				.append(' ')
 		}
 
 		val msaa = pref.getString("msaa", "0")?.toIntOrNull() ?: 0
@@ -285,6 +301,24 @@ class Game(val ctx: Context, val basedir: File, val gameInfoFile: File, previous
 
 	companion object {
 		private const val TAG = "Game"
+
+		private val customResolutionPattern =
+			Regex("""^\s*(\d{2,5})\s*[xX×]\s*(\d{2,5})\s*$""")
+
+		/**
+		 * Parses a user supplied exact scene resolution such as "860x605" or
+		 * "1920 x 1080". Returns null when the text is empty or out of range.
+		 */
+		fun parseCustomResolution(value: String?): Pair<Int, Int>? {
+			val match = customResolutionPattern.matchEntire(value?.trim().orEmpty()) ?: return null
+			val width = match.groupValues[1].toIntOrNull() ?: return null
+			val height = match.groupValues[2].toIntOrNull() ?: return null
+
+			if (width !in 64..8192 || height !in 64..8192)
+				return null
+
+			return width to height
+		}
 
 		suspend fun getGames(ctx: Context, root: File, previous: List<Game> = emptyList()): List<Game> {
 			val known = previous.associateBy { it.basedir }

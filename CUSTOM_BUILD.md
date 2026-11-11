@@ -32,8 +32,17 @@ broke the legacy GLES1 driver path, so renderer initialization crashed in
 * The Android launcher now has per-game settings for:
   * render resolution (`Native`, `1080p`, `720p`, `540p`, `480p`, `360p`),
     implemented with the renderer's `r_scene_scale`;
+  * custom exact resolution (for example `860x605`), implemented with the
+    renderer's `r_scene_width` and `r_scene_height`. When both are set they
+    override `r_scene_scale`; the HUD is still drawn at native resolution;
   * MSAA (off, 2x, 4x, 8x, 16x);
   * renderer (`Automatic`, `GL4ES`, `GLES3`, `GLES1`, `Software`).
+
+### OpenGL error console spam
+
+Some GL wrappers report the same harmless error every frame. The renderer now
+prints each unique error and call site once (and keeps repeating texture-upload
+errors rate-limited), instead of flooding the console every frame.
 
 ## Building
 

@@ -41,7 +41,7 @@ jobs:
           BUILD_NUM=$(( ( $(date +%s) - $(date -u -d '2015-04-01' +%s) ) / 86400 ))
           NOTES="buildnum ${BUILD_NUM}
 
-          Xash3D FWGS engine with the Android 17 GLES1 startup crash fix, MSAA (-msaa) and render resolution (r_scene_scale) launcher settings. arm64-v8a only."
+          Xash3D FWGS engine with the Android 17 GLES1 startup crash fix, MSAA (-msaa), preset and custom exact render resolution (for example 860x605), and OpenGL error console spam suppression. arm64-v8a only."
           if gh release view continuous >/dev/null 2>&1; then
             gh release upload continuous artifacts/xash3d-fwgs-android.apk --clobber
             gh release edit continuous --notes "$NOTES"

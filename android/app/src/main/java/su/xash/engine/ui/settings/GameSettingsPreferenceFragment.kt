@@ -3,7 +3,9 @@ package su.xash.engine.ui.settings
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.core.net.toUri
+import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -50,6 +52,29 @@ class GameSettingsPreferenceFragment(val game: Game) : PreferenceFragmentCompat(
 
 		populateDownloadedBuildInfo()
 
+		val customResolution = findPreference<EditTextPreference>("custom_resolution")!!
+		updateCustomResolutionSummary(customResolution)
+		customResolution.setOnPreferenceChangeListener { pref, newValue ->
+			val text = (newValue as? String).orEmpty().trim()
+
+			if (text.isEmpty()) {
+				pref.summary = getString(R.string.game_settings_custom_resolution_none)
+				true
+			} else {
+				val parsed = Game.parseCustomResolution(text)
+				if (parsed == null) {
+					Toast.makeText(requireContext(),
+						R.string.game_settings_custom_resolution_invalid,
+						Toast.LENGTH_LONG).show()
+					false
+				} else {
+					pref.summary = getString(R.string.game_settings_custom_resolution_value,
+						parsed.first, parsed.second)
+					true
+				}
+			}
+		}
+
 		val separatePackages = findPreference<SwitchPreferenceCompat>("separate_libraries")!!
 		val clientPackage = findPreference<ListPreference>("client_package")!!
 		val serverPackage = findPreference<ListPreference>("server_package")!!
@@ -66,6 +91,14 @@ class GameSettingsPreferenceFragment(val game: Game) : PreferenceFragmentCompat(
 
 			true
 		}
+	}
+
+	private fun updateCustomResolutionSummary(pref: EditTextPreference) {
+		val parsed = Game.parseCustomResolution(pref.text)
+		pref.summary = if (parsed != null)
+			getString(R.string.game_settings_custom_resolution_value, parsed.first, parsed.second)
+		else
+			getString(R.string.game_settings_custom_resolution_none)
 	}
 
 	private fun populateDownloadedBuildInfo() {

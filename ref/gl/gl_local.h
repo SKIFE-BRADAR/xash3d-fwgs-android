@@ -816,6 +816,8 @@ extern convar_t r_ripple_updatetime;
 extern convar_t r_ripple_spawntime;
 extern convar_t r_large_lightmaps;
 extern convar_t r_scene_scale;
+extern convar_t r_scene_width;
+extern convar_t r_scene_height;
 
 //
 // engine shared convars

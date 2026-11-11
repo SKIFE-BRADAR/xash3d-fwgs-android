@@ -89,6 +89,11 @@
 	<string name="game_settings_resolution_540p">540p</string>
 	<string name="game_settings_resolution_480p">480p</string>
 	<string name="game_settings_resolution_360p">360p</string>
+	<string name="game_settings_custom_resolution">Custom resolution (WxH)</string>
+	<string name="game_settings_custom_resolution_message">Enter an exact size such as 860x605. Width and height must be between 64 and 8192. Leave empty to use the preset resolution.</string>
+	<string name="game_settings_custom_resolution_none">Not set — using preset resolution</string>
+	<string name="game_settings_custom_resolution_value">%1$d x %2$d</string>
+	<string name="game_settings_custom_resolution_invalid">Invalid resolution. Use WxH, for example 860x605 (values 64–8192).</string>
 	<string name="game_settings_msaa">Anti-aliasing (MSAA)</string>
 	<string name="game_settings_msaa_off">Off</string>
 	<string name="game_settings_msaa_2x">2x MSAA</string>

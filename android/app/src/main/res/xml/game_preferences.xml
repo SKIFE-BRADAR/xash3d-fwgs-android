@@ -17,6 +17,12 @@
 		app:title="@string/game_settings_resolution"
 		app:useSimpleSummaryProvider="true" />
 
+	<EditTextPreference
+		app:key="custom_resolution"
+		app:layout="@layout/edit_text_preference"
+		app:title="@string/game_settings_custom_resolution"
+		app:dialogMessage="@string/game_settings_custom_resolution_message" />
+
 	<ListPreference
 		app:defaultValue="0"
 		app:entries="@array/game_settings_msaa_entries"
