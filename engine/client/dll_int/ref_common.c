@@ -30,6 +30,7 @@ GNU General Public License for more details.
 #endif
 
 static void SetMSAAFromCommandLine( void );
+static void SetSceneResolutionFromCommandLine( void );
 
 struct ref_state_s ref;
 
@@ -725,6 +726,59 @@ static void SetMSAAFromCommandLine( void )
 	Cvar_DirectSetValue( &gl_msaa_samples, samples );
 }
 
+/*
+================
+SetSceneResolutionFromCommandLine
+
+Applies -scene_width, -scene_height and -scene_scale after the renderer is
+loaded. This matters because "+" commands are only executed through
+"stuffcmds" (which requires a game .rc file), while "-" options are parsed
+directly. Must run after the renderer has registered its cvars and executed
+opengl.cfg, so command line values always win over saved config values.
+================
+*/
+static void SetSceneResolutionFromCommandLine( void )
+{
+	int scene_width, scene_height;
+	qboolean has_width, has_height;
+	convar_t *width_var = Cvar_FindVar( "r_scene_width" );
+	convar_t *height_var = Cvar_FindVar( "r_scene_height" );
+	convar_t *scale_var = Cvar_FindVar( "r_scene_scale" );
+	string scale_string;
+
+	// only the GL renderers implement scene scaling
+	if( !width_var || !height_var || !scale_var )
+	{
+		if( Sys_CheckParm( "-scene_width" ) || Sys_CheckParm( "-scene_height" ) || Sys_CheckParm( "-scene_scale" ))
+			Con_Printf( S_WARN "%s: scene resolution is not supported by the loaded renderer\n", __func__ );
+		return;
+	}
+
+	has_width = Sys_GetIntFromCmdLine( "-scene_width", &scene_width );
+	has_height = Sys_GetIntFromCmdLine( "-scene_height", &scene_height );
+
+	if( has_width != has_height )
+	{
+		Con_Printf( S_WARN "%s: both -scene_width and -scene_height are required, ignoring\n", __func__ );
+	}
+	else if( has_width )
+	{
+		// zero is valid: it clears an exact size saved in opengl.cfg
+		scene_width = bound( 0, scene_width, 8192 );
+		scene_height = bound( 0, scene_height, 8192 );
+
+		Cvar_DirectSetValue( width_var, scene_width );
+		Cvar_DirectSetValue( height_var, scene_height );
+	}
+
+	if( _Sys_GetParmFromCmdLine( "-scene_scale", scale_string, sizeof( scale_string )))
+		Cvar_DirectSetValue( scale_var, bound( 0.1f, Q_atof( scale_string ), 8.0f ));
+
+	// always print, so the effective values are visible in the console/log
+	Con_Printf( "Scene resolution: scale %s, exact %sx%s\n",
+		scale_var->string, width_var->string, height_var->string );
+}
+
 // Renderers that are known to be broken on the current device are filtered
 // out from automatic selection. Explicitly requested renderers (via -ref) are
 // still loaded, because the user may know better.
@@ -918,6 +972,10 @@ qboolean R_Init( void )
 		Sys_Error( "Can't initialize any renderer. Check your video drivers!\n" );
 		return false;
 	}
+
+	// apply scene resolution options after the renderer has registered its
+	// cvars and executed opengl.cfg, but before the first frame is rendered
+	SetSceneResolutionFromCommandLine();
 
 	SCR_Init();
 

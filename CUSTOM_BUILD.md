@@ -29,6 +29,15 @@ broke the legacy GLES1 driver path, so renderer initialization crashed in
 * New engine argument: `-msaa <0|2|4|8|16>`. It is applied after the renderer
   config is executed but before the GL context is created, so unlike
   `+gl_msaa_samples` it actually takes effect.
+* New engine arguments: `-scene_width <px>`, `-scene_height <px>` and
+  `-scene_scale <0.1-8.0>`. They are parsed after the renderer has loaded and
+  executed `opengl.cfg`, so they reliably override saved values. `0 0` clears
+  an exact scene size. These exist because `+r_scene_*` commands only run
+  through `stuffcmds`, which requires the game's `.rc` file and therefore may
+  silently do nothing on Android.
+* The renderer always prints the effective scene resolution to the console and
+  `engine.log` (for example `Scene resolution: rendering 3D at 860x605 (0x
+  MSAA), upscaling to 2400x1080`), so the setting can be verified.
 * The Android launcher now has per-game settings for:
   * render resolution (`Native`, `1080p`, `720p`, `540p`, `480p`, `360p`),
     implemented with the renderer's `r_scene_scale`;

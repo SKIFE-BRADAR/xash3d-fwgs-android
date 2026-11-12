@@ -114,17 +114,20 @@ class Game(val ctx: Context, val basedir: File, val gameInfoFile: File, previous
 		val customResolution = parseCustomResolution(pref.getString("custom_resolution", ""))
 		val targetHeight = pref.getString("resolution_height", "0")?.toIntOrNull() ?: 0
 
+		// Exact scene size, e.g. 860x605. r_scene_width/r_scene_height
+		// override r_scene_scale in the renderer. These are passed as direct
+		// "-" engine options because "+" commands are only executed through
+		// "stuffcmds", which depends on the game's .rc file and may never run.
 		if (customResolution != null) {
-			// Exact scene size, e.g. 860x605. r_scene_width/r_scene_height
-			// override r_scene_scale in the renderer. Always reset the scale so
-			// a stale value from opengl.cfg can never take over.
-			videoArgs.append("+r_scene_width ").append(customResolution.first).append(' ')
-			videoArgs.append("+r_scene_height ").append(customResolution.second).append(' ')
-			videoArgs.append("+r_scene_scale 1.0 ")
+			videoArgs.append("-scene_width ").append(customResolution.first).append(' ')
+			videoArgs.append("-scene_height ").append(customResolution.second).append(' ')
+			// always reset the scale so a stale value from opengl.cfg can
+			// never take over the exact size
+			videoArgs.append("-scene_scale 1.0 ")
 		} else {
 			// Always clear exact-size overrides that may have been saved into
 			// opengl.cfg by an older launch.
-			videoArgs.append("+r_scene_width 0 +r_scene_height 0 ")
+			videoArgs.append("-scene_width 0 -scene_height 0 ")
 
 			val metrics = ctx.resources.displayMetrics
 			val screenHeight = minOf(metrics.widthPixels, metrics.heightPixels)
@@ -133,7 +136,7 @@ class Game(val ctx: Context, val basedir: File, val gameInfoFile: File, previous
 			else
 				1.0f
 
-			videoArgs.append("+r_scene_scale ")
+			videoArgs.append("-scene_scale ")
 				.append(String.format(Locale.US, "%.4f", scale))
 				.append(' ')
 		}

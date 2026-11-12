@@ -234,13 +234,22 @@ void GL_CheckRenderTargets( void )
 		ClearBits( r_scene_height.flags, FCVAR_CHANGED );
 		tr.targets.failed = false;
 
+		if(( custom_width > 0 ) != ( custom_height > 0 ))
+			gEngfuncs.Con_Printf( S_WARN "scene resolution: set both r_scene_width and r_scene_height, ignoring exact size\n" );
+
 		if( wanted && !GL_Support( GL_FRAMEBUFFER_OBJECT_EXT ))
-			gEngfuncs.Con_Printf( S_WARN "custom scene resolution requires framebuffer objects, which are not supported\n" );
+			gEngfuncs.Con_Printf( S_WARN "scene resolution %dx%d requires framebuffer objects, which are not supported\n", scene_width, scene_height );
 	}
 
 	if( !wanted || !GL_Support( GL_FRAMEBUFFER_OBJECT_EXT ))
 	{
+		qboolean was_active = GL_RenderTargetsActive();
+
 		GL_FreeRenderTargets();
+
+		if( was_active )
+			gEngfuncs.Con_Printf( "Scene resolution: render targets disabled, drawing directly at %dx%d\n", width, height );
+
 		return;
 	}
 
@@ -262,7 +271,7 @@ void GL_CheckRenderTargets( void )
 
 	if( samples && !GL_CreateRenderTarget( &tr.targets.msaa, "*fbo_msaa", scene_width, scene_height, samples, RT_DEPTH ))
 	{
-		gEngfuncs.Con_Printf( S_WARN "r_scene_scale: can't create %dx multisampled render target, continuing without\n", samples );
+		gEngfuncs.Con_Printf( S_WARN "scene resolution: can't create %dx multisampled render target, continuing without\n", samples );
 		samples = 0;
 	}
 
@@ -276,11 +285,11 @@ void GL_CheckRenderTargets( void )
 	{
 		GL_FreeRenderTargets();
 		tr.targets.failed = true;
-		gEngfuncs.Con_Printf( S_ERROR "r_scene_scale: can't create render targets, rendering directly to the window\n" );
+		gEngfuncs.Con_Printf( S_ERROR "scene resolution: can't create %dx%d render targets, rendering directly to the window\n", scene_width, scene_height );
 		return;
 	}
 
-	gEngfuncs.Con_Reportf( "%s: scene %dx%d (%dx MSAA), screen %dx%d\n", __func__, scene_width, scene_height, samples, width, height );
+	gEngfuncs.Con_Printf( "Scene resolution: rendering 3D at %dx%d (%dx MSAA), upscaling to %dx%d\n", scene_width, scene_height, samples, width, height );
 
 	pglBindFramebuffer( GL_FRAMEBUFFER, tr.targets.screen.fbo );
 }
