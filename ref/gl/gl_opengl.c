@@ -485,6 +485,33 @@ For ARB_debug_output
 #if !XASH_GL4ES // GL4ES doesn't provide glDebug functions, even as stubs
 static void APIENTRY GL_DebugOutput( GLuint source, GLuint type, GLuint id, GLuint severity, GLint length, const GLcharARB *message, GLvoid *userParam )
 {
+	static GLuint seen_error_ids[32];
+	static int num_seen_error_ids;
+	static qboolean overflow_reported;
+
+	// Drivers can repeat the same debug error every frame. Report each
+	// message id once and suppress the rest.
+	if( type == GL_DEBUG_TYPE_ERROR_ARB )
+	{
+		for( int i = 0; i < num_seen_error_ids; i++ )
+		{
+			if( seen_error_ids[i] == id )
+				return;
+		}
+
+		if( num_seen_error_ids >= ARRAYSIZE( seen_error_ids ))
+		{
+			if( !overflow_reported )
+			{
+				overflow_reported = true;
+				gEngfuncs.Con_Printf( S_OPENGL_ERROR "too many unique GL debug errors, further messages suppressed\n" );
+			}
+			return;
+		}
+
+		seen_error_ids[num_seen_error_ids++] = id;
+	}
+
 	switch( type )
 	{
 	case GL_DEBUG_TYPE_ERROR_ARB:

@@ -41,8 +41,9 @@ broke the legacy GLES1 driver path, so renderer initialization crashed in
 ### OpenGL error console spam
 
 Some GL wrappers report the same harmless error every frame. The renderer now
-prints each unique error and call site once (and keeps repeating texture-upload
-errors rate-limited), instead of flooding the console every frame.
+prints each unique error and call site once, caps repeated texture-upload
+errors, and suppresses duplicate GL debug callbacks instead of flooding the
+console every frame.
 
 ## Building
 
