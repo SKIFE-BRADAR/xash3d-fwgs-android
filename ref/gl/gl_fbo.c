@@ -190,9 +190,9 @@ static void GL_SceneInfo( const char *text )
 
 static const char *GL_LoadedRenderer( void )
 {
-	convar_t *var = gEngfuncs.Cvar_Get( "r_refdll_loaded", "?", 0, NULL );
+	const char *name = gEngfuncs.pfnGetCvarString( "r_refdll_loaded" );
 
-	return ( var && !COM_StringEmptyOrNULL( var->string )) ? var->string : "?";
+	return COM_StringEmptyOrNULL( name ) ? "?" : name;
 }
 
 /*
