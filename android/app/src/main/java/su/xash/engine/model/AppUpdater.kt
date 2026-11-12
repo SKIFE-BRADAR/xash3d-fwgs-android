@@ -22,7 +22,15 @@ import kotlin.coroutines.coroutineContext
 
 class AppUpdater(private val context: Context) {
 
-	data class UpdateInfo(val buildNum: Int, val tagName: String)
+	data class UpdateInfo(val buildNum: Int, val tagName: String, val buildSha: String?) {
+		/**
+		 * Identifies one exact published APK. Build numbers only change once a
+		 * day, so several builds published the same day must also compare the
+		 * commit hash, otherwise the in-app updater reports "up to date" while
+		 * the release asset already contains a newer build.
+		 */
+		val buildKey: String get() = buildSha ?: buildNum.toString()
+	}
 	data class CommitInfo(val sha: String, val subject: String)
 
 	sealed interface UpdateCheck {
@@ -58,11 +66,19 @@ class AppUpdater(private val context: Context) {
 
 				// buildnum is days-since-2015-04-01, same metric as VERSION_CODE / 10000
 				val remote = BUILDNUM_REGEX.find(body)?.groupValues?.get(1)?.toIntOrNull()
+				val remoteSha = BUILDSHA_REGEX.find(body)?.groupValues?.get(1)?.lowercase()
+				val localSha = BuildConfig.GIT_HASH.lowercase()
 				val localDays = BuildConfig.VERSION_CODE / 10000
-				Log.i(TAG, "Remote buildnum: $remote (tag=$tagName), local: $localDays")
+				Log.i(TAG, "Remote buildnum: $remote (tag=$tagName, sha=$remoteSha), local: $localDays ($localSha)")
 
-				if (remote != null && remote - localDays >= STALENESS_DAYS)
-					UpdateCheck.Available(UpdateInfo(remote, tagName))
+				val newerDay = remote != null && remote - localDays >= STALENESS_DAYS
+				val sameDayNewBuild = remote != null && remote >= localDays &&
+					!remoteSha.isNullOrEmpty() && localSha.isNotEmpty() &&
+					remoteSha != localSha &&
+					!remoteSha.startsWith(localSha) && !localSha.startsWith(remoteSha)
+
+				if (remote != null && (newerDay || sameDayNewBuild))
+					UpdateCheck.Available(UpdateInfo(remote, tagName, remoteSha))
 				else
 					UpdateCheck.UpToDate
 			} catch (e: CancellationException) {
@@ -133,6 +149,9 @@ class AppUpdater(private val context: Context) {
 				connection.connectTimeout = 10000
 				connection.readTimeout = 30000
 				connection.instanceFollowRedirects = true
+				connection.useCaches = false
+				connection.setRequestProperty("Cache-Control", "no-cache")
+				connection.setRequestProperty("Pragma", "no-cache")
 				connection.connect()
 
 				if (connection.responseCode != HttpURLConnection.HTTP_OK)
@@ -208,5 +227,6 @@ class AppUpdater(private val context: Context) {
 		private const val COMPARE_API_BASE =
 			"https://api.github.com/repos/SKIFE-BRADAR/xash3d-fwgs-android/compare"
 		private val BUILDNUM_REGEX = Regex("""buildnum\s+(\d+)""")
+		private val BUILDSHA_REGEX = Regex("""(?m)^\s*build\s+([0-9a-fA-F]{7,40})\s*$""")
 	}
 }

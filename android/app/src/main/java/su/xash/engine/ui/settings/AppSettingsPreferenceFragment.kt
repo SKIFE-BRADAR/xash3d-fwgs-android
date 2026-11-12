@@ -75,6 +75,8 @@ class AppSettingsPreferenceFragment() : PreferenceFragmentCompat() {
 				true
 			}
 		}
+
+		findPreference<Preference>("installed_engine_version")?.summary = BuildConfig.VERSION_NAME
 	}
 
 	private fun handlePickedGameDirectory(uri: Uri) {

@@ -59,6 +59,19 @@ prints each unique error and call site once, caps repeated texture-upload
 errors, and suppresses duplicate GL debug callbacks instead of flooding the
 console every frame.
 
+A single remaining `GL_INVALID_ENUM` line is a one-time state error reported
+by the GL wrapper, not a repeating per-frame failure; the suffix
+`further identical errors suppressed` confirms the suppression is active.
+
+### In-app updates
+
+The updater compares both the release build number and the commit hash from
+the release notes. Build numbers only change once a day, so this makes builds
+published later on the same day visible to the in-app updater. APK downloads
+are requested with cache-control headers, and every release also publishes a
+uniquely named asset (`xash3d-fwgs-android-<hash>.apk`) for manual downloads.
+The installed engine version is shown in the app settings.
+
 ## Building
 
 The `Android custom build` GitHub Actions workflow builds an arm64-v8a APK

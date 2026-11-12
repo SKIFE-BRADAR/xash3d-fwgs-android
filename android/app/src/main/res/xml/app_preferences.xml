@@ -20,4 +20,9 @@
 	<Preference
 		app:key="check_updates"
 		app:title="@string/check_updates" />
+
+	<Preference
+		app:key="installed_engine_version"
+		app:selectable="false"
+		app:title="@string/installed_engine_version" />
 </PreferenceScreen>

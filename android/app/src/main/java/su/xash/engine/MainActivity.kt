@@ -74,14 +74,14 @@ class MainActivity : AppCompatActivity() {
 			prefs.edit().putInt(KEY_REMOTE_BUILDNUM, info.buildNum).apply()
 
 			val staleness = info.buildNum - installedDays
-			val snoozed = prefs.getInt(KEY_DISMISSED_BUILDNUM, -1) >= info.buildNum &&
+			val snoozed = prefs.getString(KEY_DISMISSED_BUILD, null) == info.buildKey &&
 				staleness < MAX_NAG_STALENESS_DAYS &&
 				now < prefs.getLong(KEY_DISMISS_UNTIL, 0L)
 			if (snoozed)
 				return@launch
 
 			val changelog = updater.fetchChangelog(BuildConfig.GIT_HASH, info.tagName)
-			showEngineUpdateDialog(updater, info.buildNum, changelog, prefs)
+			showEngineUpdateDialog(updater, info, changelog, prefs)
 		}
 	}
 
@@ -92,15 +92,15 @@ class MainActivity : AppCompatActivity() {
 		return (DISMISS_SNOOZE_START_MS * factor).toLong()
 	}
 
-	private fun snoozeUpdate(prefs: android.content.SharedPreferences, remoteBuildNum: Int) {
+	private fun snoozeUpdate(prefs: android.content.SharedPreferences, buildKey: String) {
 		val now = System.currentTimeMillis()
-		val prevBuild = prefs.getInt(KEY_DISMISSED_BUILDNUM, -1)
+		val prevBuild = prefs.getString(KEY_DISMISSED_BUILD, null)
 		val prevFirst = prefs.getLong(KEY_FIRST_DISMISS_TIME, 0L)
 		// A newer build restarts the escalation clock; the same build keeps counting.
-		val firstDismiss = if (remoteBuildNum > prevBuild || prevFirst == 0L) now else prevFirst
+		val firstDismiss = if (buildKey != prevBuild || prevFirst == 0L) now else prevFirst
 		val snooze = snoozeFor(now - firstDismiss)
 		prefs.edit()
-			.putInt(KEY_DISMISSED_BUILDNUM, remoteBuildNum)
+			.putString(KEY_DISMISSED_BUILD, buildKey)
 			.putLong(KEY_FIRST_DISMISS_TIME, firstDismiss)
 			.putLong(KEY_DISMISS_UNTIL, now + snooze)
 			.apply()
@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity() {
 					val prefs = getSharedPreferences(UPDATE_PREFS, Context.MODE_PRIVATE)
 					prefs.edit().putLong(KEY_LAST_CHECK, System.currentTimeMillis()).apply()
 					val changelog = updater.fetchChangelog(BuildConfig.GIT_HASH, result.info.tagName)
-					showEngineUpdateDialog(updater, result.info.buildNum, changelog, prefs)
+					showEngineUpdateDialog(updater, result.info, changelog, prefs)
 				}
 				is AppUpdater.UpdateCheck.UpToDate,
 				is AppUpdater.UpdateCheck.Disabled ->
@@ -152,7 +152,7 @@ class MainActivity : AppCompatActivity() {
 
 	private fun showEngineUpdateDialog(
 		updater: AppUpdater,
-		remoteBuildNum: Int,
+		info: AppUpdater.UpdateInfo,
 		changelog: List<AppUpdater.CommitInfo>?,
 		prefs: android.content.SharedPreferences,
 	) {
@@ -176,14 +176,14 @@ class MainActivity : AppCompatActivity() {
 			// buttons are measured first and the changelog shrinks and scrolls.
 			.setView(dialogContentView(
 				this,
-				getString(R.string.engine_update_message, remoteBuildNum),
+				getString(R.string.engine_update_message, info.buildNum),
 				changelogText,
 			))
 			.setPositiveButton(R.string.engine_update_download) { _, _ ->
 				showEngineDownloadDialog(updater)
 			}
 			.setNegativeButton(R.string.engine_update_later) { _, _ ->
-				snoozeUpdate(prefs, remoteBuildNum)
+				snoozeUpdate(prefs, info.buildKey)
 			}
 			.show()
 	}
@@ -266,7 +266,7 @@ class MainActivity : AppCompatActivity() {
 		private const val CHANGELOG_MAX_LINES = 15
 		private const val UPDATE_PREFS = "app_updater"
 		private const val KEY_LAST_CHECK = "last_check_ms"
-		private const val KEY_DISMISSED_BUILDNUM = "dismissed_buildnum"
+		private const val KEY_DISMISSED_BUILD = "dismissed_build_key"
 		private const val KEY_DISMISS_UNTIL = "dismiss_until_ms"
 		private const val KEY_FIRST_DISMISS_TIME = "first_dismiss_ms"
 		private const val KEY_REMOTE_BUILDNUM = "remote_buildnum"

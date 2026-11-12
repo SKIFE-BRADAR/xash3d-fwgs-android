@@ -179,11 +179,10 @@ static qboolean GL_SceneInfoEnabled( void )
 
 static void GL_SceneInfo( const char *text )
 {
-	if( !GL_SceneInfoEnabled( ))
-		return;
-
 	// big center message and a top-left notification, so the effective
-	// resolution is visible without opening the console
+	// resolution is visible without opening the console. This is only called
+	// when a non-native scene resolution was requested (or when -scene_info
+	// explicitly asks for the native notice), so it can't spam normal runs.
 	gEngfuncs.CL_CenterPrint( text, 0.35f );
 	gEngfuncs.Con_NPrintf( 0, "%s\n", text );
 }
@@ -339,7 +338,6 @@ void GL_CheckRenderTargets( void )
 
 	gEngfuncs.Con_Printf( "Scene resolution: rendering 3D at %dx%d (%dx MSAA), upscaling to %dx%d [%s]\n", scene_width, scene_height, samples, width, height, GL_LoadedRenderer( ));
 
-	if( GL_SceneInfoEnabled( ))
 	{
 		char msg[160];
 
