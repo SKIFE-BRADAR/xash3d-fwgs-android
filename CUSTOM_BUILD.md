@@ -38,6 +38,11 @@ broke the legacy GLES1 driver path, so renderer initialization crashed in
 * The renderer always prints the effective scene resolution to the console and
   `engine.log` (for example `Scene resolution: rendering 3D at 860x605 (0x
   MSAA), upscaling to 2400x1080`), so the setting can be verified.
+* When a non-native scene resolution is requested, the launcher prefers GL4ES
+  over NanoGL/GLES1 (which compile out render target support) and passes
+  `-scene_info`. The renderer then shows the effective size as a center
+  message and a top-left notification, and the launcher shows a startup toast
+  with the app version, requested size and renderer.
 * The Android launcher now has per-game settings for:
   * render resolution (`Native`, `1080p`, `720p`, `540p`, `480p`, `360p`),
     implemented with the renderer's `r_scene_scale`;

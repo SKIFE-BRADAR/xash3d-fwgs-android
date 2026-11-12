@@ -33,14 +33,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           BUILD_NUM=$(( ( $(date +%s) - $(date -u -d '2015-04-01' +%s) ) / 86400 ))
+          SHORT_SHA=${GITHUB_SHA::7}
+          cp artifacts/xash3d-fwgs-android.apk "artifacts/xash3d-fwgs-android-${SHORT_SHA}.apk"
           NOTES="buildnum ${BUILD_NUM}
+          build ${SHORT_SHA}
 
           Xash3D FWGS engine with the Android 17 GLES1 startup crash fix, MSAA (-msaa), preset and custom exact render resolution (for example 860x605), and OpenGL error console spam suppression. arm64-v8a only."
           if gh release view continuous >/dev/null 2>&1; then
-            gh release upload continuous artifacts/xash3d-fwgs-android.apk --clobber
+            gh release upload continuous artifacts/xash3d-fwgs-android.apk "artifacts/xash3d-fwgs-android-${SHORT_SHA}.apk" --clobber
             gh release edit continuous --notes "$NOTES"
+            # keep only the current uniquely-named APK
+            ( gh release view continuous --json assets -q '.assets[].name' \
+              | grep -E '^xash3d-fwgs-android-[0-9a-f]{7}\.apk$' \
+              | grep -v "xash3d-fwgs-android-${SHORT_SHA}.apk" \
+              | while read -r old; do gh release delete-asset continuous "$old" -y; done ) || true
           else
-            gh release create continuous artifacts/xash3d-fwgs-android.apk \
+            gh release create continuous artifacts/xash3d-fwgs-android.apk "artifacts/xash3d-fwgs-android-${SHORT_SHA}.apk" \
               --prerelease \
               --title "Custom Android engine build" \
               --notes "$NOTES"

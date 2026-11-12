@@ -167,6 +167,34 @@ static void GL_GetWindowSize( int *width, int *height )
 	}
 }
 
+static qboolean GL_SceneInfoEnabled( void )
+{
+	static int enabled = -1;
+
+	if( enabled < 0 )
+		enabled = gEngfuncs.Sys_CheckParm( "-scene_info" ) ? 1 : 0;
+
+	return enabled != 0;
+}
+
+static void GL_SceneInfo( const char *text )
+{
+	if( !GL_SceneInfoEnabled( ))
+		return;
+
+	// big center message and a top-left notification, so the effective
+	// resolution is visible without opening the console
+	gEngfuncs.CL_CenterPrint( text, 0.35f );
+	gEngfuncs.Con_NPrintf( 0, "%s\n", text );
+}
+
+static const char *GL_LoadedRenderer( void )
+{
+	convar_t *var = gEngfuncs.Cvar_Get( "r_refdll_loaded", "?", 0, NULL );
+
+	return ( var && !COM_StringEmptyOrNULL( var->string )) ? var->string : "?";
+}
+
 /*
 ================
 GL_GetSceneTargetSize
@@ -238,12 +266,28 @@ void GL_CheckRenderTargets( void )
 			gEngfuncs.Con_Printf( S_WARN "scene resolution: set both r_scene_width and r_scene_height, ignoring exact size\n" );
 
 		if( wanted && !GL_Support( GL_FRAMEBUFFER_OBJECT_EXT ))
+		{
+			char msg[128];
+
 			gEngfuncs.Con_Printf( S_WARN "scene resolution %dx%d requires framebuffer objects, which are not supported\n", scene_width, scene_height );
+			Q_snprintf( msg, sizeof( msg ), "3D olcekleme desteklenmiyor: %dx%d [%s]", scene_width, scene_height, GL_LoadedRenderer( ));
+			GL_SceneInfo( msg );
+		}
 	}
 
 	if( !wanted || !GL_Support( GL_FRAMEBUFFER_OBJECT_EXT ))
 	{
+		static qboolean native_reported;
 		qboolean was_active = GL_RenderTargetsActive();
+
+		if( !wanted && GL_SceneInfoEnabled( ) && !native_reported )
+		{
+			char msg[128];
+
+			native_reported = true;
+			Q_snprintf( msg, sizeof( msg ), "3D native: %dx%d [%s]", width, height, GL_LoadedRenderer( ));
+			GL_SceneInfo( msg );
+		}
 
 		GL_FreeRenderTargets();
 
@@ -283,13 +327,25 @@ void GL_CheckRenderTargets( void )
 	if( !GL_CreateRenderTarget( &tr.targets.scene, "*fbo_scene", scene_width, scene_height, 0, scene_flags )
 		|| !GL_CreateRenderTarget( &tr.targets.screen, "*fbo_screen", width, height, 0, RT_COLOR_TEXTURE|RT_DEPTH ))
 	{
+		char msg[128];
+
 		GL_FreeRenderTargets();
 		tr.targets.failed = true;
 		gEngfuncs.Con_Printf( S_ERROR "scene resolution: can't create %dx%d render targets, rendering directly to the window\n", scene_width, scene_height );
+		Q_snprintf( msg, sizeof( msg ), "3D olcekleme basarisiz: %dx%d [%s]", scene_width, scene_height, GL_LoadedRenderer( ));
+		GL_SceneInfo( msg );
 		return;
 	}
 
-	gEngfuncs.Con_Printf( "Scene resolution: rendering 3D at %dx%d (%dx MSAA), upscaling to %dx%d\n", scene_width, scene_height, samples, width, height );
+	gEngfuncs.Con_Printf( "Scene resolution: rendering 3D at %dx%d (%dx MSAA), upscaling to %dx%d [%s]\n", scene_width, scene_height, samples, width, height, GL_LoadedRenderer( ));
+
+	if( GL_SceneInfoEnabled( ))
+	{
+		char msg[160];
+
+		Q_snprintf( msg, sizeof( msg ), "3D sahne: %dx%d -> %dx%d [%s]", scene_width, scene_height, width, height, GL_LoadedRenderer( ));
+		GL_SceneInfo( msg );
+	}
 
 	pglBindFramebuffer( GL_FRAMEBUFFER, tr.targets.screen.fbo );
 }

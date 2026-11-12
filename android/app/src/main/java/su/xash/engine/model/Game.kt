@@ -6,7 +6,9 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.core.net.toUri
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
@@ -15,6 +17,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import su.xash.engine.BuildConfig
 import su.xash.engine.R
 import su.xash.engine.XashActivity
 import su.xash.engine.util.showDownloadProgressDialog
@@ -107,12 +110,34 @@ class Game(val ctx: Context, val basedir: File, val gameInfoFile: File, previous
 		// arguments so they are applied before/independent of the config file.
 		val videoArgs = StringBuilder()
 
-		val renderer = pref.getString("renderer", "auto")
+		val customResolution = parseCustomResolution(pref.getString("custom_resolution", ""))
+		val targetHeight = pref.getString("resolution_height", "0")?.toIntOrNull() ?: 0
+		val sceneScalingRequested = customResolution != null || targetHeight > 0
+
+		// NanoGL/GLES1 and gl-wes builds compile out render target support, so
+		// scene scaling silently does nothing there. Prefer GL4ES whenever a
+		// non-native scene resolution is requested. Explicit GL4ES/GLES3
+		// choices are left untouched; software rendering is left untouched too.
+		var renderer = pref.getString("renderer", "auto")
+		if (Build.VERSION.SDK_INT >= 37 && renderer == "gles1")
+			renderer = "auto"
+		if (sceneScalingRequested && (renderer.isNullOrEmpty() || renderer == "auto"
+				|| renderer == "gles1" || renderer == "gles2"))
+			renderer = "gl4es"
+
 		if (!renderer.isNullOrEmpty() && renderer != "auto")
 			videoArgs.append("-ref ").append(renderer).append(' ')
 
-		val customResolution = parseCustomResolution(pref.getString("custom_resolution", ""))
-		val targetHeight = pref.getString("resolution_height", "0")?.toIntOrNull() ?: 0
+		// Show the build and the requested scene size for a few seconds, so it
+		// is possible to confirm that this exact APK and setting are active.
+		val sceneLabel = when {
+			customResolution != null -> "3D ${customResolution.first}x${customResolution.second}"
+			targetHeight > 0 -> "3D ${targetHeight}p"
+			else -> "3D native"
+		}
+		Toast.makeText(ctx,
+			"Xash3D ${BuildConfig.VERSION_NAME} | $sceneLabel | ${renderer ?: "auto"}",
+			Toast.LENGTH_LONG).show()
 
 		// Exact scene size, e.g. 860x605. r_scene_width/r_scene_height
 		// override r_scene_scale in the renderer. These are passed as direct
@@ -140,6 +165,10 @@ class Game(val ctx: Context, val basedir: File, val gameInfoFile: File, previous
 				.append(String.format(Locale.US, "%.4f", scale))
 				.append(' ')
 		}
+
+		// ask the renderer to confirm the effective scene/upscale size on screen
+		if (sceneScalingRequested)
+			videoArgs.append("-scene_info ")
 
 		val msaa = pref.getString("msaa", "0")?.toIntOrNull() ?: 0
 		if (msaa == 0 || msaa == 2 || msaa == 4 || msaa == 8 || msaa == 16)
