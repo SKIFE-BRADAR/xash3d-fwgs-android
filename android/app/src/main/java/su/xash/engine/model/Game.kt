@@ -125,8 +125,12 @@ class Game(val ctx: Context, val basedir: File, val gameInfoFile: File, previous
 				|| renderer == "gles1" || renderer == "gles2"))
 			renderer = "gl4es"
 
-		if (!renderer.isNullOrEmpty() && renderer != "auto")
+		if (!renderer.isNullOrEmpty() && renderer != "auto") {
+			// the launcher's renderer choice must win over a stale -ref in the
+			// user's command line (Sys_CheckParm returns the first match)
+			commandLineArgs = commandLineArgs.replace(Regex("""(^|\s)-ref\s+\S+"""), " ")
 			videoArgs.append("-ref ").append(renderer).append(' ')
+		}
 
 		// Show the build and the requested scene size for a few seconds, so it
 		// is possible to confirm that this exact APK and setting are active.
